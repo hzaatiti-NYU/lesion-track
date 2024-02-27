@@ -49,8 +49,10 @@ def display_images(slice_index):
     cbar = fig.colorbar(im, cax=cbar_ax, ticks=[0, 1, 2, 3])
     cbar.set_ticklabels(['No Change (Black)', 'Unchanged (White to White)', 'Decrease (White to Black)', 'Increase (Black to White)'])
     cbar.ax.set_ylabel('Change Type', rotation=270, labelpad=15)
-    plt.title("Showing the ")
+    plt.title("Showing the lesion progression")
+    plt.savefig("output/difference_lesions")
     plt.show()
+    plt.close()
 
 # Example usage for a specific slice
 slice_index = difference_volume.shape[2] // 2

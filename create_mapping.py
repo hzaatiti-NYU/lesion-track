@@ -122,7 +122,9 @@ def plot_labeled_regions_with_mapping(image1_data, image1_labels, image2_data, i
     axs[1].axis('off')
 
     plt.tight_layout()
+    plt.savefig("output/labels_lesions")
     plt.show()
+    plt.close()
 
 
 def get_mapped_id(region_id_image2, region_mapping):
@@ -142,44 +144,102 @@ def get_mapped_id(region_id_image2, region_mapping):
 # Assuming you have your images loaded and processed with labels and mapping obtained
 # Adjust slice_index as needed for your specific images
 slice_index = image1_data.shape[2] // 2  # Example slice index for visualization
-plot_labeled_regions_with_mapping(image1_data, image1_labels, image2_data, image2_labels, region_mapping, slice_index)
+
+visu = True
+if visu:
+    plot_labeled_regions_with_mapping(image1_data, image1_labels, image2_data, image2_labels, region_mapping, slice_index)
 
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 
-def generate_pdf_report(tracking_info, output_path='tracking_report.pdf'):
-    c = canvas.Canvas(output_path, pagesize=letter)
-    width, height = letter  # Get the width and height of the page
-    c.setFont("Helvetica", 12)
+number_lesions_initial = np.unique(image1_labels)[1:]
 
-    # Title
-    c.drawCentredString(width / 2.0, height - 50, "Lesion Tracking Report")
+print('Number of lesions in first time point', len(number_lesions_initial))
 
-    # Subtitle or additional info
-    c.setFont("Helvetica", 10)
-    c.drawCentredString(width / 2.0, height - 70, "Comparative analysis between two time points")
+number_lesions_final = np.unique(image2_labels)[1:]
 
-    # Initialize the y position for the first item
-    y_position = height - 100
+print('Number of lesions in second time point', len(number_lesions_final))
 
-    # Loop through each item in tracking_info and add it to the report
+def count_none_mappings(region_mapping):
+    """
+    Count the number of regions from the first image that are mapped to None.
 
-    for region_id, info in tracking_info.items():
-        text = f"Region ID {region_id}: Status - {info['status']}"
-        if 'new_id' in info:
-            text += f", New ID in the second image: {info.get('new_id', 'N/A')}"
-        c.drawString(40, y_position, text)
-        y_position -= 20
+    :param region_mapping: The dictionary containing the mapping from regions of image1 to image2.
+    :return: The count of regions from image1 that are mapped to None.
+    """
+    none_count = sum(value is None for value in region_mapping.values())
+    return none_count
 
-        # Check to avoid writing beyond the bottom of the page
-        if y_position < 40:  # Margin
-            c.showPage()
-            c.setFont("Helvetica", 10)
-            y_position = height - 40
+print('Number of lesions that seems to have disappeared is', count_none_mappings(region_mapping))
 
-    c.save()
 
-# Assuming tracking_info is defined and populated
-# Call the function with the tracking_info dictionary
-generate_pdf_report(tracking_info, 'tracking_report.pdf')
+
+#here u can use the same mapping function but in reverse order, to find out if a new lesion exist
+
+region_mapping_backward =  map_regions(image2_labels, image1_labels)
+
+print('Number of new lesions that didnt seem to have a precedent is', count_none_mappings(region_mapping_backward)
+      )
+
+import json
+
+
+def convert_numpy_to_python(value):
+    """
+    Convert a NumPy data type to native Python type for JSON serialization.
+
+    :param value: The value to convert.
+    :return: The value converted to a native Python type.
+    """
+    if isinstance(value, np.generic):
+        return value.item()
+    elif isinstance(value, dict):
+        return {convert_numpy_to_python(key): convert_numpy_to_python(val) for key, val in value.items()}
+    elif isinstance(value, list):
+        return [convert_numpy_to_python(item) for item in value]
+    else:
+        return value
+
+
+def save_mapping_data_to_json(region_mapping, region_mapping_backward, image1_data, image2_data, image1_labels, image2_labels,
+                              file_name="region_mapping_log.json"):
+    """
+    Convert all NumPy data types to Python types and save the region mapping data and lesion counts to a JSON file.
+
+    :param region_mapping: Mapping from the first to the second image.
+    :param region_mapping_backward: Mapping from the second back to the first image.
+    :param image1_data: Image data for the first time point.
+    :param image2_data: Image data for the second time point.
+    :param file_name: Name of the file to save the JSON data.
+    """
+    # Convert NumPy data types to Python for the entire data structure
+    region_mapping_python = convert_numpy_to_python(region_mapping)
+    region_mapping_backward_python = convert_numpy_to_python(region_mapping_backward)
+
+    data_to_save = {
+        "region_mapping_forward": region_mapping_python,
+        "region_mapping_backward": region_mapping_backward_python,
+        "lesions_initial_time_point": len(np.unique(image1_labels)[1:]),
+        "lesions_second_time_point": len(np.unique(image2_labels)[1:]),
+        "disappeared_lesions": count_none_mappings(region_mapping),
+        "new_lesions": count_none_mappings(region_mapping_backward)
+    }
+
+    # Write to JSON file
+    with open(file_name, 'w') as outfile:
+        json.dump(data_to_save, outfile, indent=4)
+
+
+save_mapping_data_to_json(region_mapping,
+                          region_mapping_backward,
+                          image1_data,
+                          image2_data,
+                          image1_labels,
+                          image2_labels, "output/output_data_log.json")
+
+#Now use difference_computation.py to build the difference to see if it increased, or decreased to stayed the same
+#Use the same code while adding a condition using the mask label
+#Filter on the overlapping regions, i.e. the regions that are mapped to something and not to None
+
+
+
+b = 1
