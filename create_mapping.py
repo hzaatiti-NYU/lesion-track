@@ -11,6 +11,9 @@ background_1 = 'data/tp001_mode02_bias_corrected.nii.gz'
 background_2 = 'data/tp002_mode02_bias_corrected.nii.gz'
 
 
+background1_data = load_nifti_image(background_1)
+background2_data = load_nifti_image(background_2)
+
 image1_data = load_nifti_image(lesion_mask1)
 image1_labels, _ = find_and_label_regions(image1_data)
 
@@ -28,11 +31,11 @@ image2_properties = compute_region_properties(image2_labels)
 region_properties_array = [image1_properties, image2_properties]
 
 for region_id1 in image1_properties:
-    plot_region_center_full_size(image1_data, image1_properties, region_id1, 1)
-
+    #plot_region_center_full_size(image1_data, image1_properties, region_id1, 1)
+    plot_region_center_full_size_bg(background1_data, image1_labels,  image1_properties, region_id1, 1)
 
 for region_id2 in image2_properties:
-    plot_region_center_full_size(image2_data, image2_properties, region_id2, 2)
+    plot_region_center_full_size_bg(background1_data, image2_labels, image2_properties, region_id2, 2)
 
 
 # Assuming you have two labeled images: image1_labels and image2_labels
@@ -43,9 +46,6 @@ region_mapping = map_regions(image1_labels, image2_labels)
 
 # Now, region_mapping contains the associations between regions in image1 and image2
 print(region_mapping)
-
-
-
 
 
 
@@ -68,9 +68,7 @@ number_lesions_final = np.unique(image2_labels)[1:]
 print('Number of lesions in second time point', len(number_lesions_final))
 
 
-
 print('Number of lesions that seems to have disappeared is', count_none_mappings(region_mapping))
-
 
 
 #here u can use the same mapping function but in reverse order, to find out if a new lesion exist

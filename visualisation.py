@@ -114,7 +114,7 @@ def plot_labeled_regions_with_mapping(image1_data, image1_labels, image2_data, i
     plt.close()
 
 
-def plot_region_center_full_size_bg(background_data, lesion_data, region_properties, region_id, out_number, zoom_size=100):
+def plot_region_center_full_size_bg(background_data, lesion_data, region_properties, region_id, out_number, zoom_size=10):
     """
     Plot the lesion region highlighted on the background image.
 
@@ -136,7 +136,7 @@ def plot_region_center_full_size_bg(background_data, lesion_data, region_propert
        :param zoom_size: The size around the center to create the highlight.
        """
     # Get the center of the lesion region; adjusting center coordinates for image dimensions
-    center = region_properties[region_id]['centroid']
+    center = region_properties[region_id]['center']
     x_center, y_center = center[1], center[0]  # Adjusting x and y based on image coordinate system
 
     # Determine the bounding box for the lesion region
