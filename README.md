@@ -15,6 +15,9 @@ The mapping is done as follows:
 
 Way forward:
 - have the raw image for a better visualisation of the position of lesions
-- have images for different slices (currently slice 130, middle one is plotted)
+- add a convexity separation
+- for each lesion, compute its volume in voxels, center
+- plot each lesion at the center
 - have images for each lesion, and plot it at its center slice
 - add qualitative attribute to each lesion (increased, decreased, disappeared, appeared)
+- uniformise the grayscale using a vmin- vmax contrast normaliser

@@ -1,7 +1,10 @@
+import os
+
 import json
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.utils import ImageReader
+
 
 # Load JSON data
 def load_data(filename):
@@ -71,6 +74,23 @@ def generate_pdf(data, output_filename, image_filename1, image_filename2):
         if y_position < 50:
             c.showPage()
             y_position = 750
+
+    image_directory = 'lesions_out/'
+
+    # Iterating over lesion images
+    lesion_images = sorted(
+        [img for img in os.listdir(image_directory) if img.startswith('lesion') and img.endswith('.png')])
+
+    for image_name in lesion_images:
+        if y_position < 200:  # Check space for new image; if not enough, create a new page
+            c.showPage()
+            y_position = 750
+
+        # Image caption
+        c.drawString(100, y_position - 20, f"Lesion ID: {image_name.split('.')[0]}")
+        image_path = os.path.join(image_directory, image_name)
+        c.drawImage(ImageReader(image_path), 100, y_position - 220, width=400, height=200)
+        y_position -= 240  # Adjust for the next image based on size
 
     c.save()
 
