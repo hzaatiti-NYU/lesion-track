@@ -40,20 +40,17 @@ for region_id2 in image2_properties:
 
 # Assuming you have two labeled images: image1_labels and image2_labels
 
-
 # Build the mapping based on the spatial overlap
 region_mapping = map_regions(image1_labels, image2_labels)
 
 # Now, region_mapping contains the associations between regions in image1 and image2
 print(region_mapping)
 
-
-
 # Assuming you have your images loaded and processed with labels and mapping obtained
 # Adjust slice_index as needed for your specific images
 slice_index = image1_data.shape[2] // 2  # Example slice index for visualization
 
-visu = True
+visu = False
 if visu:
     plot_labeled_regions_with_mapping(image1_data, image1_labels, image2_data, image2_labels, region_mapping, slice_index)
 

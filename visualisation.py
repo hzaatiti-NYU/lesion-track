@@ -114,7 +114,59 @@ def plot_labeled_regions_with_mapping(image1_data, image1_labels, image2_data, i
     plt.close()
 
 
+
+
+
+
 def plot_region_center_full_size_bg(background_data, lesion_data, region_properties, region_id, out_number, zoom_size=10):
+    """
+    Plot the lesion region highlighted on the sagittal view of the background image.
+
+    :param background_data: The 3D background image data array.
+    :param lesion_data: The 3D lesion image data array.
+    :param region_properties: Properties of the lesion regions.
+    :param region_id: The ID of the lesion region to plot.
+    :param out_number: Output number for file naming.
+    :param zoom_size: The size around the center to create the highlight.
+    """
+    # Get the center of the lesion region; adjusting center coordinates for image dimensions
+    center = region_properties[region_id]['center']
+    y_center, z_center = center[1], center[2]  # Adjusting y and z for sagittal view; assume center[1] is x
+
+    # Determine the bounding box for the lesion region in the sagittal plane
+    y_min = max(y_center - zoom_size, 0)
+    y_max = min(y_center + zoom_size, background_data.shape[1])
+    z_min = max(z_center - zoom_size, 0)
+    z_max = min(z_center + zoom_size, background_data.shape[2])
+
+    #TODO: The rotation of the background requires that all rectangle box and lesion plot is rotated the same way
+
+    # Get the appropriate sagittal slice from the background and lesion data
+    sagittal_index = int(center[0])  # X coordinate for sagittal slice
+    background_slice = background_data[sagittal_index, :, :]
+    lesion_slice = np.zeros_like(background_slice)
+    lesion_slice[lesion_data[sagittal_index, :, :] == region_id] = 1  # Isolate the region
+
+    # Plotting
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.imshow(background_slice.T, cmap='gray', origin='lower')  # Show the background, transpose for correct orientation
+    ax.imshow(np.ma.masked_where(lesion_slice.T == 0, lesion_slice.T), cmap='autumn', alpha=0.7, origin='lower')  # Overlay the lesion
+
+    # Highlight the lesion region with a rectangle
+    rect = patches.Rectangle((z_min, y_min), z_max - z_min, y_max - y_min,
+                             linewidth=1, edgecolor='r', facecolor='none')
+    ax.add_patch(rect)
+
+    # Finalize plot
+    ax.set_xlim(0, background_data.shape[2])
+    ax.set_ylim(0, background_data.shape[0])
+    ax.set_title(f"Region {region_id} in Sagittal View at X = {sagittal_index}")
+    plt.savefig(f'lesions_out/lesions_{out_number}/lesion_sagittal_{region_id}.png')
+    plt.close()
+    #plt.show()
+
+
+def plot_region_center_full_size_bg_top(background_data, lesion_data, region_properties, region_id, out_number, zoom_size=10):
     """
     Plot the lesion region highlighted on the background image.
 
@@ -166,7 +218,7 @@ def plot_region_center_full_size_bg(background_data, lesion_data, region_propert
     ax.set_ylim(background_data.shape[0], 0)
     ax.set_title(f"Region {region_id} at Slice {slice_index}")
     plt.savefig(f'lesions_out/lesions_{out_number}/lesion{region_id}.png')
-    plt.show()
+    #plt.show()
 
 
 # def plot_region_center(image_data, region_properties, region_id, number, zoom_size=100):
